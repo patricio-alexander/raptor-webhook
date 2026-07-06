@@ -1,0 +1,27 @@
+{
+  "name": "subify",
+  "version": "1.0.0",
+  "description": "SDK para interactuar con la api de gestor de proyectos",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "test": "vitest --reporter=verbose",
+    "build": "tsup",
+    "prepare": "npm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^26.1.0",
+    "concurrently": "^10.0.3",
+    "dotenv": "^17.4.2",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10"
+  }
+}
