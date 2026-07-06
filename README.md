@@ -5,7 +5,7 @@ SDK para interactuar con la API de gestor de proyectos.
 ## Instalación
 
 ```bash
-npm install subify
+npm install git+ssh://git@github.com:patricio-alexander/subify.git
 ```
 
 ## Uso
@@ -25,6 +25,52 @@ if (subscription.error) {
 const result = await Subify.activateSubscription({
   licenseKey: "XXXX-XXXX-XXXX",
 });
+```
+
+## Ejemplo con React + Custom Hook
+
+```jsx
+// App.jsx — configurar al inicio
+import Subify from "subify";
+Subify.configure({ apiKey: import.meta.env.VITE_SUBSCRIPTION_API_KEY });
+
+// hooks/useSubscription.js
+import { useState, useEffect } from "react";
+import Subify from "subify";
+
+export function useSubscription() {
+  const [subscription, setSubscription] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    Subify.getSubscriptionInfo()
+      .then((res) => {
+        if (res.error) {
+          setError(res.error);
+        } else {
+          setSubscription(res.data);
+        }
+      })
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { subscription, loading, error };
+}
+
+// pages/Dashboard.jsx
+import { useSubscription } from "../hooks/useSubscription";
+
+export default function Dashboard() {
+  const { subscription, loading, error } = useSubscription();
+
+  if (loading) return <p>Verificando suscripción...</p>;
+  if (error) return <p>Error: {error}</p>;
+  if (!subscription?.subscribed) return <p>Sin suscripción activa</p>;
+
+  return <p>Plan: {subscription.subscription.plan_name}</p>;
+}
 ```
 
 ## API
