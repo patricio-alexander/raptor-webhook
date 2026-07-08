@@ -77,6 +77,29 @@ var Subscription = class {
       return { error: getErroMessage(error), data: null };
     }
   }
+  async incrementUsage({ section }) {
+    try {
+      if (!this.apikey) {
+        throw new Error("No existe apiKey");
+      }
+      const response = await fetch(
+        `${this.apiUrl}/api/sections/${section}/usage`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${this.apikey}`
+          }
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+      return { error: null, data };
+    } catch (error) {
+      return { error: getErroMessage(error), data: null };
+    }
+  }
 };
 
 // src/index.ts

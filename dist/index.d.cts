@@ -11,7 +11,13 @@ interface SubscriptionInfo {
         modules: {
             id: number;
             name: string;
-            sections: string[];
+            sections: {
+                id: number;
+                key: string;
+                name: string;
+                max_records_limit: number;
+                usage_count: number;
+            };
         }[];
         offers: {
             name: string;
@@ -37,25 +43,31 @@ interface ExchangedLicense {
     license_key: string;
 }
 
+interface UsageInfo {
+    max_limit: number;
+    usage: number;
+    remaining: number;
+}
+
 interface SubcriptionSDKI {
     configure({ apiKey }: {
         apiKey: string;
     }): void;
+    incrementUsage({ section, }: {
+        section: string;
+    }): Promise<{
+        error: null | string;
+        data: UsageInfo | null;
+    }>;
     activateSubscription({ licenseKey, }: {
         licenseKey: string;
     }): Promise<{
-        error: null;
-        data: ExchangedLicense;
-    } | {
-        error: string;
-        data: null;
+        error: null | string;
+        data: ExchangedLicense | null;
     }>;
     getSubscriptionInfo(): Promise<{
-        error: null;
-        data: SubscriptionInfo;
-    } | {
-        error: string;
-        data: null;
+        error: null | string;
+        data: SubscriptionInfo | null;
     }>;
 }
 declare class Subscription implements SubcriptionSDKI {
@@ -79,6 +91,12 @@ declare class Subscription implements SubcriptionSDKI {
     } | {
         error: string;
         data: null;
+    }>;
+    incrementUsage({ section }: {
+        section: string;
+    }): Promise<{
+        error: null | string;
+        data: UsageInfo | null;
     }>;
 }
 
