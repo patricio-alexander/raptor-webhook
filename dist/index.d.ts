@@ -1,24 +1,3 @@
-interface SubcriptionSDKI {
-    configure({ apiKey }: {
-        apiKey: string;
-    }): void;
-    activateSubscription({ licenseKey, }: {
-        licenseKey: string;
-    }): Promise<{
-        error: null;
-        data: any;
-    } | {
-        error: string;
-        data: null;
-    }>;
-    getSubscriptionInfo(): Promise<{
-        error: null;
-        data: any;
-    } | {
-        error: string;
-        data: null;
-    }>;
-}
 interface SubscriptionInfo {
     subscribed: boolean;
     subscription: {
@@ -43,8 +22,24 @@ interface SubscriptionInfo {
                 name: string;
             }[];
         };
-    } | null;
+        capabilities: {
+            id: number;
+            code: string;
+            name: string;
+            is_active: boolean;
+            section: {
+                id: number;
+                key: string;
+                name: string;
+            };
+            module: {
+                id: number;
+                name: string;
+            };
+        }[];
+    };
 }
+
 interface ExchangedLicense {
     id: number;
     app_hash: string;
@@ -54,13 +49,12 @@ interface ExchangedLicense {
     status: "ACTIVE";
     license_key: string;
 }
-declare class Subscription implements SubcriptionSDKI {
-    private apikey;
-    private apiUrl;
+
+interface SubcriptionSDKI {
     configure({ apiKey }: {
         apiKey: string;
     }): void;
-    activateSubscription({ licenseKey }: {
+    activateSubscription({ licenseKey, }: {
         licenseKey: string;
     }): Promise<{
         error: null;
@@ -72,6 +66,29 @@ declare class Subscription implements SubcriptionSDKI {
     getSubscriptionInfo(): Promise<{
         error: null;
         data: SubscriptionInfo;
+    } | {
+        error: string;
+        data: null;
+    }>;
+}
+declare class Subscription implements SubcriptionSDKI {
+    private apikey;
+    private apiUrl;
+    configure({ apiKey }: {
+        apiKey: string;
+    }): void;
+    activateSubscription({ licenseKey }: {
+        licenseKey: string;
+    }): Promise<{
+        error: null;
+        data: any;
+    } | {
+        error: string;
+        data: null;
+    }>;
+    getSubscriptionInfo(): Promise<{
+        error: null;
+        data: any;
     } | {
         error: string;
         data: null;

@@ -17,8 +17,7 @@ var Subscription = class {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apikey}`,
-          Origin: "https://aplicaciones.marianosamaniego.edu.ec"
+          Authorization: `Bearer ${this.apikey}`
         },
         body: JSON.stringify({
           license_key: licenseKey
@@ -40,8 +39,7 @@ var Subscription = class {
       }
       const response = await fetch(`${this.apiUrl}/subscriptions/check`, {
         headers: {
-          Authorization: `Bearer ${this.apikey}`,
-          Origin: "https://aplicaciones.marianosamaniego.edu.ec"
+          Authorization: `Bearer ${this.apikey}`
         }
       });
       const data = await response.json();

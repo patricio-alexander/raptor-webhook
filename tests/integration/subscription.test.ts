@@ -24,6 +24,7 @@ describe("Intregacion: SDK", () => {
 
   it("Obtiene los datos de las subscripcion con getSubscriptionInfo()", async () => {
     const subscription = await Subscription.getSubscriptionInfo();
+    console.log(subscription);
     expect(subscription.error).toBeNull();
     expect(subscription.data?.subscribed).toBeDefined();
   });
