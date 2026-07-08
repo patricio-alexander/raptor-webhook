@@ -2,23 +2,24 @@ import { getErroMessage } from "./utils/error";
 import { SubscriptionInfo } from "./types/subcripcion-info";
 import { ExchangedLicense } from "./types/exchanged-license";
 
-
 export interface SubcriptionSDKI {
   configure({ apiKey }: { apiKey: string }): void;
   activateSubscription({
     licenseKey,
   }: {
     licenseKey: string;
-  }): Promise<{ error: null; data: ExchangedLicense } | { error: string; data: null }>;
+  }): Promise<
+    { error: null; data: ExchangedLicense } | { error: string; data: null }
+  >;
   getSubscriptionInfo(): Promise<
     { error: null; data: SubscriptionInfo } | { error: string; data: null }
   >;
 }
 
-
 export class Subscription implements SubcriptionSDKI {
   private apikey: null | string = null;
-  private apiUrl = "https://aplicaciones.marianosamaniego.edu.ec/gestor-proyectos-negocios/api";
+  private apiUrl =
+    "https://aplicaciones.marianosamaniego.edu.ec/gestor-proyectos-negocios/api";
 
   configure({ apiKey }: { apiKey: string }) {
     this.apikey = apiKey;
@@ -40,7 +41,7 @@ export class Subscription implements SubcriptionSDKI {
       if (!response.ok) {
         throw new Error(data.error);
       }
-      return { error: null, data: data};
+      return { error: null, data: data };
     } catch (error) {
       return { error: getErroMessage(error), data: null };
     }
@@ -62,7 +63,7 @@ export class Subscription implements SubcriptionSDKI {
       if (!response.ok) {
         throw new Error(data.error);
       }
-      return { error: null, data: data  };
+      return { error: null, data: data };
     } catch (error) {
       return { error: getErroMessage(error), data: null };
     }

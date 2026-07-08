@@ -1,4 +1,5 @@
 export interface SubscriptionInfo {
+  maintenance: boolean;
   subscribed: boolean;
   subscription: {
     id: number;
