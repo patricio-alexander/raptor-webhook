@@ -7,7 +7,7 @@ function getErroMessage(error) {
 // src/Subscription.ts
 var Subscription = class {
   apikey = null;
-  apiUrl = "https://aplicaciones.marianosamaniego.edu.ec/gestor-proyectos-negocios/api";
+  apiUrl = "https://aplicaciones.marianosamaniego.edu.ec/api";
   configure({ apiKey }) {
     this.apikey = apiKey;
   }
@@ -65,6 +65,27 @@ var Subscription = class {
           }
         }
       );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+      return { error: null, data };
+    } catch (error) {
+      return { error: getErroMessage(error), data: null };
+    }
+  }
+  async capture(typeKey, name, metadata) {
+    try {
+      if (!this.apikey) {
+        throw new Error("No existe apiKey");
+      }
+      const response = await fetch(`${this.apiUrl}/events`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apikey}`
+        },
+        body: JSON.stringify({ type_key: typeKey, name, metadata })
+      });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error);

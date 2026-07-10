@@ -49,6 +49,11 @@ interface UsageInfo {
     remaining: number;
 }
 
+interface CaptureEventInfo {
+    type: string;
+    captured: boolean;
+}
+
 interface SubcriptionSDKI {
     configure({ apiKey }: {
         apiKey: string;
@@ -68,6 +73,10 @@ interface SubcriptionSDKI {
     getSubscriptionInfo(): Promise<{
         error: null | string;
         data: SubscriptionInfo | null;
+    }>;
+    capture(typeKey: string, name: string, metadata: Record<string, any>): Promise<{
+        error: null | string;
+        data: CaptureEventInfo | null;
     }>;
 }
 declare class Subscription implements SubcriptionSDKI {
@@ -97,6 +106,10 @@ declare class Subscription implements SubcriptionSDKI {
     }): Promise<{
         error: null | string;
         data: UsageInfo | null;
+    }>;
+    capture(typeKey: string, name: string, metadata: Record<string, any>): Promise<{
+        error: null | string;
+        data: CaptureEventInfo | null;
     }>;
 }
 

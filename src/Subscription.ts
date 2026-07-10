@@ -2,6 +2,7 @@ import { getErroMessage } from "./utils/error";
 import { SubscriptionInfo } from "./types/subcripcion-info";
 import { ExchangedLicense } from "./types/exchanged-license";
 import { UsageInfo } from "./types/usage-info";
+import { CaptureEventInfo } from "./types/capture-event";
 
 export interface SubcriptionSDKI {
   configure({ apiKey }: { apiKey: string }): void;
@@ -19,12 +20,17 @@ export interface SubcriptionSDKI {
     error: null | string;
     data: SubscriptionInfo | null;
   }>;
+
+  capture(
+    typeKey: string,
+    name: string,
+    metadata: Record<string, any>,
+  ): Promise<{ error: null | string; data: CaptureEventInfo | null }>;
 }
 
 export class Subscription implements SubcriptionSDKI {
   private apikey: null | string = null;
-  private apiUrl =
-    "https://aplicaciones.marianosamaniego.edu.ec/gestor-proyectos-negocios/api";
+  private apiUrl = "https://aplicaciones.marianosamaniego.edu.ec/api";
 
   configure({ apiKey }: { apiKey: string }) {
     this.apikey = apiKey;
@@ -92,6 +98,34 @@ export class Subscription implements SubcriptionSDKI {
           },
         },
       );
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+      return { error: null, data: data };
+    } catch (error) {
+      return { error: getErroMessage(error), data: null };
+    }
+  }
+
+  async capture(
+    typeKey: string,
+    name: string,
+    metadata: Record<string, any>,
+  ): Promise<{ error: null | string; data: CaptureEventInfo | null }> {
+    try {
+      if (!this.apikey) {
+        throw new Error("No existe apiKey");
+      }
+
+      const response = await fetch(`${this.apiUrl}/events`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apikey}`,
+        },
+        body: JSON.stringify({ type_key: typeKey, name, metadata }),
+      });
 
       const data = await response.json();
       if (!response.ok) {
