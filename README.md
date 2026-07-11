@@ -93,14 +93,32 @@ interface SubscriptionInfo {
     status: "ACTIVE" | "EXPIRED" | "CANCELED";
     start_at: string;
     expires_at: string;
-    modules: { id: number; name: string; sections: string[] }[];
+    modules: {
+      id: number;
+      name: string;
+      sections: {
+        id: number;
+        key: string;
+        name: string;
+        max_records_limit: number;
+        usage_count: number;
+        is_trial: boolean;
+        start_trial: string;
+        limit_days_trial: string;
+        end_trial: string;
+      };
+    }[];
     offers: {
       name: string;
       price: number;
       start_at: string;
       expires_at: string;
-      modules: { id: number; name: string }[];
+      modules: {
+        id: number;
+        name: string;
+      }[];
     };
+    capabilities: Record<string, boolean>;
   } | null;
 }
 ```
@@ -108,6 +126,28 @@ interface SubscriptionInfo {
 ### `activateSubscription({ licenseKey })`
 
 Activa una suscripción usando un license key.
+
+### `startTrialModule(moduleId)`
+
+Inicia el periodo de prueba de un módulo.
+
+```ts
+interface TrialModuleInfo {
+  start_trial: string;
+  end_trial: string;
+  is_started: boolean;
+}
+```
+
+```ts
+const result = await Subify.startTrialModule(1);
+
+if (result.error) {
+  console.error(result.error);
+} else {
+  console.log(result.data.is_started); // true
+}
+```
 
 ### `capture(typeKey, name, metadata)`
 
