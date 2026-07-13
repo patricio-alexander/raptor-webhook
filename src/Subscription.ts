@@ -4,6 +4,7 @@ import { ExchangedLicense } from "./types/exchanged-license";
 import { UsageInfo } from "./types/usage-info";
 import { CaptureEventInfo } from "./types/capture-event";
 import { TrialModuleInfo } from "./types/trial-module-info";
+import { PlanInfo } from "./types/plan-info";
 
 export interface SubcriptionSDKI {
   configure({ apiKey }: { apiKey: string }): void;
@@ -32,7 +33,7 @@ export interface SubcriptionSDKI {
     moduleId: number,
   ): Promise<{ error: null | string; data: TrialModuleInfo | null }>;
 
-  getPlans(): Promise<{ error: null | string; data: TrialModuleInfo | null }>;
+  getPlans(): Promise<{ error: null | string; data: PlanInfo | null }>;
 }
 
 export class Subscription implements SubcriptionSDKI {
@@ -164,7 +165,7 @@ export class Subscription implements SubcriptionSDKI {
 
   async getPlans(): Promise<{
     error: null | string;
-    data: TrialModuleInfo | null;
+    data: PlanInfo | null;
   }> {
     try {
       if (!this.apikey) throw new Error("Nos existe apiKey");

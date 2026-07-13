@@ -66,6 +66,20 @@ interface TrialModuleInfo {
     is_started: boolean;
 }
 
+interface Price {
+    prices: number;
+    period: "MONTHLY" | "ANNUALLY";
+}
+interface Module {
+    name: string;
+    description: string;
+}
+interface PlanInfo {
+    name: string;
+    prices: Price[];
+    modules: Module[] | null;
+}
+
 interface SubcriptionSDKI {
     configure({ apiKey }: {
         apiKey: string;
@@ -96,7 +110,7 @@ interface SubcriptionSDKI {
     }>;
     getPlans(): Promise<{
         error: null | string;
-        data: TrialModuleInfo | null;
+        data: PlanInfo | null;
     }>;
 }
 declare class Subscription implements SubcriptionSDKI {
@@ -137,7 +151,7 @@ declare class Subscription implements SubcriptionSDKI {
     }>;
     getPlans(): Promise<{
         error: null | string;
-        data: TrialModuleInfo | null;
+        data: PlanInfo | null;
     }>;
 }
 
