@@ -94,6 +94,10 @@ interface SubcriptionSDKI {
         error: null | string;
         data: TrialModuleInfo | null;
     }>;
+    getPlans(): Promise<{
+        error: null | string;
+        data: TrialModuleInfo | null;
+    }>;
 }
 declare class Subscription implements SubcriptionSDKI {
     private apikey;
@@ -128,6 +132,10 @@ declare class Subscription implements SubcriptionSDKI {
         data: CaptureEventInfo | null;
     }>;
     startTrialModule(moduleId: number): Promise<{
+        error: null | string;
+        data: TrialModuleInfo | null;
+    }>;
+    getPlans(): Promise<{
         error: null | string;
         data: TrialModuleInfo | null;
     }>;

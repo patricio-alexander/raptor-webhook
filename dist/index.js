@@ -34,9 +34,7 @@ var Subscription = class {
   }
   async getSubscriptionInfo() {
     try {
-      if (!this.apikey) {
-        throw new Error("No existe apiKey");
-      }
+      if (!this.apikey) throw new Error("No existe apiKey");
       const response = await fetch(`${this.apiUrl}/subscriptions/check`, {
         headers: {
           Authorization: `Bearer ${this.apikey}`
@@ -53,9 +51,7 @@ var Subscription = class {
   }
   async incrementUsage({ section }) {
     try {
-      if (!this.apikey) {
-        throw new Error("No existe apiKey");
-      }
+      if (!this.apikey) throw new Error("No existe apiKey");
       const response = await fetch(`${this.apiUrl}/sections/${section}/usage`, {
         method: "PUT",
         headers: {
@@ -73,9 +69,7 @@ var Subscription = class {
   }
   async capture(typeKey, name, metadata) {
     try {
-      if (!this.apikey) {
-        throw new Error("No existe apiKey");
-      }
+      if (!this.apikey) throw new Error("No existe apiKey");
       const response = await fetch(`${this.apiUrl}/events`, {
         method: "POST",
         headers: {
@@ -94,9 +88,7 @@ var Subscription = class {
   }
   async startTrialModule(moduleId) {
     try {
-      if (!this.apikey) {
-        throw new Error("No existe apiKey");
-      }
+      if (!this.apikey) throw new Error("No existe apiKey");
       const response = await fetch(
         `${this.apiUrl}/modules/${moduleId}/start-trial`,
         {
@@ -106,6 +98,23 @@ var Subscription = class {
           }
         }
       );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+      return { error: null, data };
+    } catch (error) {
+      return { error: getErroMessage(error), data: null };
+    }
+  }
+  async getPlans() {
+    try {
+      if (!this.apikey) throw new Error("Nos existe apiKey");
+      const response = await fetch(`${this.apiUrl}/subscriptions/plans`, {
+        headers: {
+          Authorization: `Bearer ${this.apikey}`
+        }
+      });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error);

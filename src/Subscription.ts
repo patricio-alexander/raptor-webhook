@@ -31,6 +31,8 @@ export interface SubcriptionSDKI {
   startTrialModule(
     moduleId: number,
   ): Promise<{ error: null | string; data: TrialModuleInfo | null }>;
+
+  getPlans(): Promise<{ error: null | string; data: TrialModuleInfo | null }>;
 }
 
 export class Subscription implements SubcriptionSDKI {
@@ -65,9 +67,7 @@ export class Subscription implements SubcriptionSDKI {
 
   async getSubscriptionInfo() {
     try {
-      if (!this.apikey) {
-        throw new Error("No existe apiKey");
-      }
+      if (!this.apikey) throw new Error("No existe apiKey");
 
       const response = await fetch(`${this.apiUrl}/subscriptions/check`, {
         headers: {
@@ -90,9 +90,7 @@ export class Subscription implements SubcriptionSDKI {
     data: UsageInfo | null;
   }> {
     try {
-      if (!this.apikey) {
-        throw new Error("No existe apiKey");
-      }
+      if (!this.apikey) throw new Error("No existe apiKey");
 
       const response = await fetch(`${this.apiUrl}/sections/${section}/usage`, {
         method: "PUT",
@@ -117,9 +115,7 @@ export class Subscription implements SubcriptionSDKI {
     metadata: Record<string, any>,
   ): Promise<{ error: null | string; data: CaptureEventInfo | null }> {
     try {
-      if (!this.apikey) {
-        throw new Error("No existe apiKey");
-      }
+      if (!this.apikey) throw new Error("No existe apiKey");
 
       const response = await fetch(`${this.apiUrl}/events`, {
         method: "POST",
@@ -143,9 +139,8 @@ export class Subscription implements SubcriptionSDKI {
     moduleId: number,
   ): Promise<{ error: null | string; data: TrialModuleInfo | null }> {
     try {
-      if (!this.apikey) {
-        throw new Error("No existe apiKey");
-      }
+      if (!this.apikey) throw new Error("No existe apiKey");
+
       const response = await fetch(
         `${this.apiUrl}/modules/${moduleId}/start-trial`,
         {
@@ -162,6 +157,30 @@ export class Subscription implements SubcriptionSDKI {
       }
 
       return { error: null, data };
+    } catch (error) {
+      return { error: getErroMessage(error), data: null };
+    }
+  }
+
+  async getPlans(): Promise<{
+    error: null | string;
+    data: TrialModuleInfo | null;
+  }> {
+    try {
+      if (!this.apikey) throw new Error("Nos existe apiKey");
+      const response = await fetch(`${this.apiUrl}/subscriptions/plans`, {
+        headers: {
+          Authorization: `Bearer ${this.apikey}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error);
+      }
+
+      return { error: null, data: data };
     } catch (error) {
       return { error: getErroMessage(error), data: null };
     }
