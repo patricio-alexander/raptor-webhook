@@ -38,7 +38,8 @@ export interface SubcriptionSDKI {
 
 export class Subscription implements SubcriptionSDKI {
   private apikey: null | string = null;
-  private apiUrl = "https://aplicaciones.marianosamaniego.edu.ec/api";
+  private apiUrl =
+    "https://aplicaciones.marianosamaniego.edu.ec/gestor-proyectos-negocios/api";
 
   configure({ apiKey }: { apiKey: string }) {
     this.apikey = apiKey;
