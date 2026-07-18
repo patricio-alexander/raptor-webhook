@@ -34,12 +34,13 @@ function joinUrl(base, ...parts) {
   const path = parts.filter(Boolean).map((part) => part.replace(/^\/+|\/+$/g, "")).filter(Boolean).join("/");
   return path ? `${normalizedBase}/${path}` : normalizedBase;
 }
+var WEBHOOK_PATH = "/raptorsolutions/api/webhooks/app-events";
 function buildEventsUrl(options) {
   const protocol = options.protocol ?? "http";
   const host = options.host.replace(/^https?:\/\//, "").replace(/\/+$/, "");
   const port = options.port !== void 0 && options.port !== "" ? `:${options.port}` : "";
   const origin = `${protocol}://${host}${port}`;
-  return joinUrl(origin, options.apiPrefix ?? "");
+  return joinUrl(origin, WEBHOOK_PATH);
 }
 function createRaptorClient(options) {
   if (!options.host) {
@@ -78,9 +79,9 @@ function createRaptorClient(options) {
       }
       return {
         ok: true,
-        event_id: data.event_id ?? data.id,
+        event_id: data.event_id,
         type_key: typeof data.type_key === "string" ? data.type_key : payload.type_key,
-        event: data.event ?? data
+        event: data.event
       };
     } catch (error) {
       return {

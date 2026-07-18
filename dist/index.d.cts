@@ -1,7 +1,6 @@
 interface RaptorClientOptions {
     host: string;
     port?: string | number;
-    apiPrefix?: string;
     secret: string;
     /** Defaults to `http`. Use `https` when the webhook endpoint is TLS-terminated. */
     protocol?: "http" | "https";
