@@ -1,160 +1,34 @@
-interface SubscriptionInfo {
-    maintenance: boolean;
-    subscribed: boolean;
-    subscription: {
-        id: number;
-        plan_name: string;
-        period: "MONTHLY" | "ANNUALLY";
-        status: "ACTIVE" | "EXPIRED" | "CANCELED";
-        start_at: string;
-        expires_at: string;
-        modules: {
-            id: number;
-            name: string;
-            is_maintainer: boolean;
-            image_url: string;
-            is_trial: boolean;
-            start_trial: string;
-            limit_days_trial: string;
-            end_trial: string;
-            sections: {
-                id: number;
-                key: string;
-                name: string;
-                max_records_limit: number;
-                usage_count: number;
-            };
-        }[];
-        offers: {
-            name: string;
-            price: number;
-            start_at: string;
-            expires_at: string;
-            modules: {
-                id: number;
-                name: string;
-            }[];
-        };
-        capabilities: Record<string, boolean>;
-    };
+interface RaptorClientOptions {
+    host: string;
+    port?: string | number;
+    apiPrefix?: string;
+    secret: string;
+    /** Defaults to `http`. Use `https` when the webhook endpoint is TLS-terminated. */
+    protocol?: "http" | "https";
 }
-
-interface ExchangedLicense {
-    id: number;
-    app_hash: string;
-    plan_price_id: number;
-    start_at: string;
-    expires_at: string;
-    status: "ACTIVE";
-    license_key: string;
-}
-
-interface UsageInfo {
-    max_limit: number;
-    usage: number;
-    remaining: number;
-}
-
-interface CaptureEventInfo {
-    type: string;
-    captured: boolean;
-}
-
-interface TrialModuleInfo {
-    start_trial: string;
-    end_trial: string;
-    is_started: boolean;
-}
-
-interface Price {
-    prices: number;
-    period: "MONTHLY" | "ANNUALLY";
-}
-interface Module {
+interface NotifyPayload {
+    type_key: string;
     name: string;
-    description: string;
+    metadata?: Record<string, unknown>;
 }
-interface PlanInfo {
-    name: string;
-    prices: Price[];
-    modules: Module[] | null;
+interface NotifySuccess {
+    ok: true;
+    event_id: string | number;
+    type_key: string;
+    event: unknown;
 }
-
-interface SubcriptionSDKI {
-    configure({ apiKey }: {
-        apiKey: string;
-    }): void;
-    incrementUsage({ section, }: {
-        section: string;
-    }): Promise<{
-        error: null | string;
-        data: UsageInfo | null;
-    }>;
-    activateSubscription({ licenseKey, }: {
-        licenseKey: string;
-    }): Promise<{
-        error: null | string;
-        data: ExchangedLicense | null;
-    }>;
-    getSubscriptionInfo(): Promise<{
-        error: null | string;
-        data: SubscriptionInfo | null;
-    }>;
-    capture(typeKey: string, name: string, metadata: Record<string, any>): Promise<{
-        error: null | string;
-        data: CaptureEventInfo | null;
-    }>;
-    startTrialModule(moduleId: number): Promise<{
-        error: null | string;
-        data: TrialModuleInfo | null;
-    }>;
-    getPlans(): Promise<{
-        error: null | string;
-        data: PlanInfo | null;
-    }>;
+interface NotifyFailure {
+    ok: false;
+    error: string;
+    status: number | null;
 }
-declare class Subscription implements SubcriptionSDKI {
-    private apikey;
-    private apiUrl;
-    configure({ apiKey }: {
-        apiKey: string;
-    }): void;
-    activateSubscription({ licenseKey }: {
-        licenseKey: string;
-    }): Promise<{
-        error: null;
-        data: any;
-    } | {
-        error: string;
-        data: null;
-    }>;
-    getSubscriptionInfo(): Promise<{
-        error: null;
-        data: any;
-    } | {
-        error: string;
-        data: null;
-    }>;
-    incrementUsage({ section }: {
-        section: string;
-    }): Promise<{
-        error: null | string;
-        data: UsageInfo | null;
-    }>;
-    capture(typeKey: string, name: string, metadata: Record<string, any>): Promise<{
-        error: null | string;
-        data: CaptureEventInfo | null;
-    }>;
-    startTrialModule(moduleId: number): Promise<{
-        error: null | string;
-        data: TrialModuleInfo | null;
-    }>;
-    getPlans(): Promise<{
-        error: null | string;
-        data: PlanInfo | null;
-    }>;
+type NotifyResult = NotifySuccess | NotifyFailure;
+interface RaptorClient {
+    notify(payload: NotifyPayload): Promise<NotifyResult>;
+    notifyOk(type_key: string, name: string, metadata?: Record<string, unknown>): void;
+    notifyFail(type_key: string, name: string, metadata?: Record<string, unknown>): void;
 }
 
-declare const _default: Subscription;
+declare function createRaptorClient(options: RaptorClientOptions): RaptorClient;
 
-export { _default as default };
+export { type NotifyFailure, type NotifyPayload, type NotifyResult, type NotifySuccess, type RaptorClient, type RaptorClientOptions, createRaptorClient };

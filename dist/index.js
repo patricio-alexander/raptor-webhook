@@ -1,134 +1,83 @@
-// src/utils/error.ts
-function getErroMessage(error) {
+// src/client.ts
+function getErrorMessage(error) {
   if (error instanceof Error) return error.message;
   return String(error);
 }
-
-// src/Subscription.ts
-var Subscription = class {
-  apikey = null;
-  apiUrl = "https://aplicaciones.marianosamaniego.edu.ec/gestor-proyectos-negocios/api";
-  configure({ apiKey }) {
-    this.apikey = apiKey;
+function joinUrl(base, ...parts) {
+  const normalizedBase = base.replace(/\/+$/, "");
+  const path = parts.filter(Boolean).map((part) => part.replace(/^\/+|\/+$/g, "")).filter(Boolean).join("/");
+  return path ? `${normalizedBase}/${path}` : normalizedBase;
+}
+function buildEventsUrl(options) {
+  const protocol = options.protocol ?? "http";
+  const host = options.host.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  const port = options.port !== void 0 && options.port !== "" ? `:${options.port}` : "";
+  const origin = `${protocol}://${host}${port}`;
+  return joinUrl(origin, options.apiPrefix ?? "");
+}
+function createRaptorClient(options) {
+  if (!options.host) {
+    throw new Error("createRaptorClient: `host` is required");
   }
-  async activateSubscription({ licenseKey }) {
+  if (!options.secret) {
+    throw new Error("createRaptorClient: `secret` is required");
+  }
+  const eventsUrl = buildEventsUrl(options);
+  const authorization = `Bearer ${options.secret}`;
+  async function notify(payload) {
     try {
-      const response = await fetch(`${this.apiUrl}/subscriptions`, {
+      const response = await fetch(eventsUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apikey}`
+          Authorization: authorization
         },
         body: JSON.stringify({
-          license_key: licenseKey
+          type_key: payload.type_key,
+          name: payload.name,
+          metadata: payload.metadata ?? {}
         })
       });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error);
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
       }
-      return { error: null, data };
+      if (!response.ok) {
+        return {
+          ok: false,
+          error: typeof data.error === "string" ? data.error : `Request failed with status ${response.status}`,
+          status: response.status
+        };
+      }
+      return {
+        ok: true,
+        event_id: data.event_id ?? data.id,
+        type_key: typeof data.type_key === "string" ? data.type_key : payload.type_key,
+        event: data.event ?? data
+      };
     } catch (error) {
-      return { error: getErroMessage(error), data: null };
+      return {
+        ok: false,
+        error: getErrorMessage(error),
+        status: null
+      };
     }
   }
-  async getSubscriptionInfo() {
-    try {
-      if (!this.apikey) throw new Error("No existe apiKey");
-      const response = await fetch(`${this.apiUrl}/subscriptions/check`, {
-        headers: {
-          Authorization: `Bearer ${this.apikey}`
-        }
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-      return { error: null, data };
-    } catch (error) {
-      return { error: getErroMessage(error), data: null };
-    }
+  function fireAndForget(payload) {
+    void notify(payload);
   }
-  async incrementUsage({ section }) {
-    try {
-      if (!this.apikey) throw new Error("No existe apiKey");
-      const response = await fetch(`${this.apiUrl}/sections/${section}/usage`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${this.apikey}`
-        }
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-      return { error: null, data };
-    } catch (error) {
-      return { error: getErroMessage(error), data: null };
+  return {
+    notify,
+    notifyOk(type_key, name, metadata) {
+      fireAndForget({ type_key, name, metadata });
+    },
+    notifyFail(type_key, name, metadata) {
+      fireAndForget({ type_key, name, metadata });
     }
-  }
-  async capture(typeKey, name, metadata) {
-    try {
-      if (!this.apikey) throw new Error("No existe apiKey");
-      const response = await fetch(`${this.apiUrl}/events`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.apikey}`
-        },
-        body: JSON.stringify({ type_key: typeKey, name, metadata })
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-      return { error: null, data };
-    } catch (error) {
-      return { error: getErroMessage(error), data: null };
-    }
-  }
-  async startTrialModule(moduleId) {
-    try {
-      if (!this.apikey) throw new Error("No existe apiKey");
-      const response = await fetch(
-        `${this.apiUrl}/modules/${moduleId}/start-trial`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${this.apikey}`
-          }
-        }
-      );
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-      return { error: null, data };
-    } catch (error) {
-      return { error: getErroMessage(error), data: null };
-    }
-  }
-  async getPlans() {
-    try {
-      if (!this.apikey) throw new Error("Nos existe apiKey");
-      const response = await fetch(`${this.apiUrl}/subscriptions/plans`, {
-        headers: {
-          Authorization: `Bearer ${this.apikey}`
-        }
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-      return { error: null, data };
-    } catch (error) {
-      return { error: getErroMessage(error), data: null };
-    }
-  }
-};
-
-// src/index.ts
-var index_default = new Subscription();
+  };
+}
 export {
-  index_default as default
+  createRaptorClient
 };
 //# sourceMappingURL=index.js.map

@@ -1,219 +1,116 @@
-# subify
+# @raptorsolutions/webhook-client
 
-SDK para interactuar con la API de gestor de proyectos.
+Client Node/server para registrar eventos webhook hacia el gestor Raptor. Paquete **interno** — no se publica en npm; se instala desde GitHub.
 
 ## Instalación
 
+Desde la línea de comandos:
+
 ```bash
-npm install git+ssh://git@github.com:patricio-alexander/subify.git
+npm install github:patricio-alexander/raptor-webhook
 ```
+
+O en el `package.json` del proyecto consumidor:
+
+```json
+{
+  "dependencies": {
+    "@raptorsolutions/webhook-client": "github:patricio-alexander/raptor-webhook"
+  }
+}
+```
+
+Opcionalmente fija una rama, tag o commit:
+
+```json
+"@raptorsolutions/webhook-client": "github:patricio-alexander/raptor-webhook#main"
+```
+
+Requiere acceso al repositorio privado de GitHub (SSH o token según tu entorno).
 
 ## Uso
 
 ```ts
-import Subify from "subify";
+import { createRaptorClient } from "@raptorsolutions/webhook-client";
 
-Subify.configure({ apiKey: "tu-api-key" });
-
-const subscription = await Subify.getSubscriptionInfo();
-if (subscription.error) {
-  console.error(subscription.error);
-} else {
-  console.log(subscription.data);
-}
-
-const result = await Subify.activateSubscription({
-  licenseKey: "XXXX-XXXX-XXXX",
+const raptor = createRaptorClient({
+  host: process.env.RAPTOR_WEBHOOK_HOST!,
+  port: process.env.RAPTOR_WEBHOOK_PORT,
+  secret: process.env.GESTOR_SYNC_SECRET!,
 });
+
+// Fire-and-forget
+raptor.notifyOk("order.created", "Pedido #1042", { orderId: 1042 });
+raptor.notifyFail("order.create_failed", "Error al crear pedido", {
+  message: "...",
+});
+
+// Await cuando necesites el resultado
+const result = await raptor.notify({
+  type_key: "order.created",
+  name: "Pedido #1042",
+  metadata: { orderId: 1042 },
+});
+
+if (result.ok) {
+  console.log(result.event_id, result.type_key, result.event);
+} else {
+  console.error(result.error, result.status);
+}
 ```
 
-## Ejemplo con React + Custom Hook
+## Request
 
-```jsx
-// App.jsx — configurar al inicio
-import Subify from "subify";
-Subify.configure({ apiKey: import.meta.env.VITE_SUBSCRIPTION_API_KEY });
+`POST {protocol}://{host}:{port}/raptorsolutions/api/webhooks/app-events`
 
-// hooks/useSubscription.js
-import { useState, useEffect } from "react";
-import Subify from "subify";
+Ejemplo:
 
-export function useSubscription() {
-  const [subscription, setSubscription] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+`POST http://localhost:3000/raptorsolutions/api/webhooks/app-events`
 
-  useEffect(() => {
-    Subify.getSubscriptionInfo()
-      .then((res) => {
-        if (res.error) {
-          setError(res.error);
-        } else {
-          setSubscription(res.data);
-        }
-      })
-      .catch(setError)
-      .finally(() => setLoading(false));
-  }, []);
+Headers:
 
-  return { subscription, loading, error };
-}
+- `Content-Type: application/json`
+- `Authorization: Bearer {secret}`
 
-// pages/Dashboard.jsx
-import { useSubscription } from "../hooks/useSubscription";
+Body:
 
-export default function Dashboard() {
-  const { subscription, loading, error } = useSubscription();
-
-  if (loading) return <p>Verificando suscripción...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (!subscription?.subscribed) return <p>Sin suscripción activa</p>;
-
-  return <p>Plan: {subscription.subscription.plan_name}</p>;
+```json
+{
+  "type_key": "order.created",
+  "name": "Pedido #1042",
+  "metadata": { "orderId": 1042 }
 }
 ```
 
 ## API
 
-### `configure({ apiKey })`
+### `createRaptorClient(options)`
 
-Configura la API key para las peticiones.
+| Opción | Tipo | Descripción |
+|---|---|---|
+| `host` | `string` | Host del webhook (requerido) |
+| `port` | `string \| number` | Puerto opcional |
+| `secret` | `string` | Token Bearer (`GESTOR_SYNC_SECRET`) |
+| `protocol` | `"http" \| "https"` | Default: `http` |
 
-### `getSubscriptionInfo()`
+### `notify({ type_key, name, metadata })`
 
-Obtiene la información de la suscripción activa.
+Envía el evento y retorna:
 
-```ts
-interface SubscriptionInfo {
-  subscribed: boolean;
-  subscription: {
-    id: number;
-    plan_name: string;
-    period: "MONTHLY" | "ANNUALLY";
-    status: "ACTIVE" | "EXPIRED" | "CANCELED";
-    start_at: string;
-    expires_at: string;
-    modules: {
-      id: number;
-      name: string;
-      sections: {
-        id: number;
-        key: string;
-        name: string;
-        max_records_limit: number;
-        usage_count: number;
-        is_trial: boolean;
-        start_trial: string;
-        limit_days_trial: string;
-        end_trial: string;
-      };
-    }[];
-    offers: {
-      name: string;
-      price: number;
-      start_at: string;
-      expires_at: string;
-      modules: {
-        id: number;
-        name: string;
-      }[];
-    };
-    capabilities: Record<string, boolean>;
-  } | null;
-}
-```
+- `{ ok: true, event_id, type_key, event }`
+- `{ ok: false, error, status }`
 
-### `activateSubscription({ licenseKey })`
+### `notifyOk(type_key, name, metadata?)` / `notifyFail(...)`
 
-Activa una suscripción usando un license key.
-
-### `startTrialModule(moduleId)`
-
-Inicia el periodo de prueba de un módulo.
-
-```ts
-interface TrialModuleInfo {
-  start_trial: string;
-  end_trial: string;
-  is_started: boolean;
-}
-```
-
-```ts
-const result = await Subify.startTrialModule(1);
-
-if (result.error) {
-  console.error(result.error);
-} else {
-  console.log(result.data.is_started); // true
-}
-```
-
-### `capture(typeKey, name, metadata)`
-
-Registra un evento en la plataforma.
-
-```ts
-interface CaptureEventInfo {
-  type: string;
-  captured: boolean;
-}
-```
-
-```ts
-const result = await Subscription.capture(
-  "customer_register",
-  "Registra usuario",
-  { screen: "Pantalla de clientes" },
-);
-
-if (result.error) {
-  console.error(result.error);
-} else {
-  console.log(result.data.captured); // true
-}
-```
-
-### `getPlans()`
-
-Obtiene los planes disponibles con sus precios y módulos.
-
-```ts
-interface Price {
-  prices: number;
-  period: "MONTHLY" | "ANNUALLY";
-}
-
-interface Module {
-  name: string;
-  description: string;
-}
-
-interface PlanInfo {
-  name: string;
-  prices: Price[];
-  modules: Module[] | null;
-}
-```
-
-```ts
-const result = await Subify.getPlans();
-
-if (result.error) {
-  console.error(result.error);
-} else {
-  console.log(result.data.name);       // "Plan Básico"
-  console.log(result.data.prices);     // [{ prices: 9.99, period: "MONTHLY" }, ...]
-  console.log(result.data.modules);    // [{ name: "Módulo X", description: "..." }, ...]
-}
-```
+Igual que `notify`, pero fire-and-forget (no hace `await`).
 
 ## Variables de entorno
 
 | Variable | Descripción |
 |---|---|
-| `TEST_API_KEY` | API key para tests de integración |
-
+| `RAPTOR_WEBHOOK_HOST` | Host del servicio webhook |
+| `RAPTOR_WEBHOOK_PORT` | Puerto |
+| `GESTOR_SYNC_SECRET` | Secret para `Authorization: Bearer ...` |
 
 ## Scripts
 
@@ -221,11 +118,3 @@ if (result.error) {
 |---|---|
 | `npm run build` | Compila el SDK con tsup |
 | `npm test` | Ejecuta tests con Vitest |
-
-## Tests
-
-```bash
-npm test
-```
-
-Requiere la variable `TEST_API_KEY` configurada en el entorno.

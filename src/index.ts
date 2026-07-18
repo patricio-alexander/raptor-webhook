@@ -1,3 +1,9 @@
-import { Subscription } from "./Subscription";
-
-export default new Subscription();
+export { createRaptorClient } from "./client";
+export type {
+  NotifyFailure,
+  NotifyPayload,
+  NotifyResult,
+  NotifySuccess,
+  RaptorClient,
+  RaptorClientOptions,
+} from "./types";
